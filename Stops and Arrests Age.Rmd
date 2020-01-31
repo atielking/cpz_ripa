@@ -1,0 +1,33 @@
+---
+title: "Stops and Arrests Age"
+author: "Allison Tielking"
+date: "1/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Libraries
+library(tidyverse)
+options(scipen=999)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Parameters
+head(RIPA.Stop.Data.2018)
+
+RIPA.Stop.Data.2018$AGE <- 
+  ifelse(RIPA.Stop.Data.2018$AGE < 18, "Under 18",
+  ifelse(RIPA.Stop.Data.2018$AGE <= 29, "18-29", "30+")) 
+
+RIPA_arrest_codes <- RIPA.Stop.Data.2018[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>% unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
+
+RIPA_arrest_join_code <- RIPA_arrest_codes %>% inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
+
+RIPA_arrest_offense_counts_age <- RIPA_arrest_join_code %>% group_by(AGENCY_NAME, Offense.Description, Offense.Level) %>% summarise(TOTAL = n(), UNDER_18_COUNT = sum(AGE == "Under 18"), EIGHTEEN_TWENTYNINE_COUNT = sum(AGE == "18-29"), THIRTY_PLUS_COUNT = sum(AGE == "30+")) %>% filter(UNDER_18_COUNT >= 10) %>% ungroup()
+
+RIPA_top_arrests_age <- RIPA_arrest_offense_counts_age %>% arrange(AGENCY_NAME, Offense.Level, desc(UNDER_18_COUNT))
+
+write_csv(RIPA_top_arrests_age, path="./RIPA_top_arrests_age.csv")
+
+```

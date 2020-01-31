@@ -16,5 +16,27 @@ options(scipen=999)
 # Parameters
 head(RIPA.Stop.Data.2018)
 
-RIPA_arrest_codes <- RIPA.Stop.Data.2018[!(RIPA.Stop.Data.2018$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>% unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS)
+RIPA.Stop.Data.2018$RACE <- 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 1, "Asian",
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 2, "Black", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 3, "Hispanic", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 4, "Asian", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 8, "Multiracial", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 5, "Native American", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 6, "Pacific Islander", "White")))))))
+
+RIPA_r <- RIPA.Stop.Data.2018 %>% select(-starts_with('RAE_')) %>% select(1:13, RACE, everything()) 
+
+RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>% unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
+
+RIPA_arrest_join_code <- RIPA_arrest_codes %>% inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
+
+RIPA_arrest_offense_counts <- RIPA_arrest_join_code %>% group_by(AGENCY_NAME, Offense.Description, Offense.Level) %>% summarise(TOTAL = n(), WHITE_ARRESTS_COUNT = sum(RACE == "White"), BLACK_ARRESTS_COUNT = sum(RACE == "Black"), HISPANIC_ARRESTS_COUNT = sum(RACE == "Hispanic"), ASIAN_ARRESTS_COUNT = sum(RACE == "Asian"), MULTIRACIAL_ARRESTS_COUNT = sum(RACE == "Multiracial"), NATIVEAM_ARRESTS_COUNT = sum(RACE == "Native American"), PACISL_ARRESTS_COUNT = sum(RACE == "Pacific Islander")) %>% filter(TOTAL >= 50) %>% ungroup()
+
+RIPA_arrests_diff <- RIPA_arrest_offense_counts %>% inner_join(Populationtotals, by = c("AGENCY_NAME" = "Agency")) %>% mutate(WHITE_ARRESTS_PROP = (WHITE_ARRESTS_COUNT / TOTAL) * 100, WHITE_ARRESTS_PROP_POP = (White / Total) * 100, WHITE_ARREST_DIFF_POP = WHITE_ARRESTS_PROP - WHITE_ARRESTS_PROP_POP, BLACK_ARRESTS_PROP = (BLACK_ARRESTS_COUNT / TOTAL) * 100, BLACK_ARRESTS_PROP_POP = (Black / Total) * 100, BLACK_ARREST_DIFF_POP = BLACK_ARRESTS_PROP - BLACK_ARRESTS_PROP_POP, HISPANIC_ARRESTS_PROP = (HISPANIC_ARRESTS_COUNT / TOTAL) * 100, HISPANIC_ARRESTS_PROP_POP = (Hispanic / Total) * 100, HISPANIC_ARREST_DIFF_POP = HISPANIC_ARRESTS_PROP - HISPANIC_ARRESTS_PROP_POP,  ASIAN_ARRESTS_PROP = (ASIAN_ARRESTS_COUNT / TOTAL) * 100, ASIAN_ARRESTS_PROP_POP = (Asian / Total) * 100, ASIAN_ARREST_DIFF_POP = ASIAN_ARRESTS_PROP - ASIAN_ARRESTS_PROP_POP, MULTIRACIAL_ARRESTS_PROP = (MULTIRACIAL_ARRESTS_COUNT / TOTAL) * 100, MULTIRACIAL_ARRESTS_PROP_POP = (Multiracial / Total) * 100, MULTIRACIAL_ARREST_DIFF_POP = MULTIRACIAL_ARRESTS_PROP - MULTIRACIAL_ARRESTS_PROP_POP, NATIVE_ARRESTS_PROP = (NATIVEAM_ARRESTS_COUNT / TOTAL) * 100, NATIVE_ARRESTS_PROP_POP = (`Native American` / Total) * 100, NATIVE_ARREST_DIFF_POP = NATIVE_ARRESTS_PROP - NATIVE_ARRESTS_PROP_POP, PACISL_ARRESTS_PROP = (PACISL_ARRESTS_COUNT / TOTAL) * 100, PACISL_ARRESTS_PROP_POP = (`Pacific Islander` / Total) * 100, PACISL_ARREST_DIFF_POP = PACISL_ARRESTS_PROP - PACISL_ARRESTS_PROP_POP )
+
+RIPA_top_arrests <- RIPA_arrest_offense_counts %>% arrange(AGENCY_NAME, Offense.Level, desc(TOTAL))
+
+write_csv(RIPA_top_arrests, path="./RIPA_top_arrests.csv")
+
 ```
