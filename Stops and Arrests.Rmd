@@ -37,6 +37,6 @@ RIPA_arrests_diff <- RIPA_arrest_offense_counts %>% inner_join(Populationtotals,
 
 RIPA_top_arrests <- RIPA_arrest_offense_counts %>% arrange(AGENCY_NAME, Offense.Level, desc(TOTAL))
 
-write_csv(RIPA_top_arrests, path="./RIPA_top_arrests.csv")
+write_csv(RIPA_arrests_diff, path="./RIPA_arrests_diff.csv")
 
 ```
