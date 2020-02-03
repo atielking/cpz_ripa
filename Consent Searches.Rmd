@@ -24,7 +24,7 @@ head(RIPA_annotated)
 
 
 ```{r message=FALSE, warning=FALSE}
-RIPA_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(contraband_no_weapon_count = count_search == 1 & CED_FIREARM == 0 & CED_AMMUNITION == 0 & CED_WEAPON == 0) %>% mutate(consent_search_no_weapon_count = contraband_no_weapon_count == 1 & count_search_consent == 1) %>% summarize(
+RIPA_consent_no_weapon <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(contraband_no_weapon_count = count_search == 1 & CED_FIREARM == 0 & CED_AMMUNITION == 0 & CED_WEAPON == 0) %>% mutate(consent_search_no_weapon_count = contraband_no_weapon_count == 1 & count_search_consent == 1) %>% summarize(
   STOP_COUNT = sum(count),
   SEARCH_COUNT = sum(count_search),
   SEARCH_CONSENT_COUNT = sum(count_search_consent),
@@ -34,6 +34,25 @@ RIPA_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>
   CONSENT_SEARCH_NO_WEAPON_RATE = (CONSENT_SEARCH_NO_WEAPON_COUNT / SEARCH_CONSENT_COUNT) * 100
 ) %>% select(-c(SEARCH_COUNT, STOP_COUNT))
 
-write_csv(RIPA_counts, path="./RIPA_consent.csv")
+write_csv(RIPA_consent_no_weapon, path="./RIPA_consent.csv")
+
+```
+
+```{r message=FALSE, warning=FALSE}
+RIPA_ban_pretext_impact <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(arrest_count = ifelse(ROS_CUSTODIAL_WITHOUT_WARRANT == 1, 1, 0)) %>% mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% mutate(firearm_discharge_count = ifelse(ADS_FIREARM_DISCHARGE == 1, 1, 0)) %>% mutate(arrest_count_ban_pretext = ifelse(arrest_count == 1 & count_search_consent == 0, 1, 0)) %>% mutate(force_count_ban_pretext = ifelse(use_of_force_count == 1 & count_search_consent == 0, 1, 0)) %>% mutate(firearm_discharge_count_ban_pretext = ifelse(firearm_discharge_count == 1 & count_search_consent == 0, 1, 0)) %>% summarize(
+  STOP_COUNT = sum(count),
+  SEARCH_CONSENT_COUNT = sum(count_search_consent),
+  ARREST_COUNT = sum(arrest_count),
+  ARREST_COUNT_BAN_PRETEXT = sum(arrest_count_ban_pretext),
+  PERCENT_DIFF_ARREST_BAN = ((ARREST_COUNT_BAN_PRETEXT - ARREST_COUNT) / ARREST_COUNT) * 100,
+  USE_FORCE_COUNT = sum(use_of_force_count),
+  USE_FORCE_COUNT_BAN_PRETEXT = sum(force_count_ban_pretext),
+  PERCENT_DIFF_FORCE_BAN = ((USE_FORCE_COUNT_BAN_PRETEXT - USE_FORCE_COUNT) / USE_FORCE_COUNT) * 100,
+  FIREARM_DISCHARGE_COUNT = sum(firearm_discharge_count),
+  FIREARM_DISCHARGE_COUNT_BAN_PRETEXT = sum(firearm_discharge_count_ban_pretext),
+  PERCENT_DIFF_FIREARM_DISCHARGE_BAN = ((FIREARM_DISCHARGE_COUNT_BAN_PRETEXT - FIREARM_DISCHARGE_COUNT) / FIREARM_DISCHARGE_COUNT) * 100
+) %>% select(-c(contains("COUNT")))
+
+write_csv(RIPA_ban_pretext_impact, path="./RIPA_ban_pretext_impact.csv")
 
 ```
