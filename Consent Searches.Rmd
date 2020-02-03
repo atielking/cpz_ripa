@@ -1,5 +1,5 @@
 ---
-title: "Consent Searches"
+title: "Consent Searches + Force Originating in Low Level Offense"
 author: "Allison Tielking"
 date: "2/2/2020"
 output: html_document
@@ -17,7 +17,8 @@ options(scipen=999)
 # Parameters
 head(RIPA.Stop.Data.2018)
 
-RIPA_annotated <- RIPA.Stop.Data.2018 %>% select (-c(G_FEMALE, G_GENDER_NONCONFORMING, G_MALE, G_TRANSGENDER_MAN, G_TRANSGENDER_WOMAN, G_FULL, G_MULTIGENDER)) %>% select(1:14, GENDER, everything()) %>% mutate(ADS_SEARCH_PERSON = replace_na(ADS_SEARCH_PERSON, 0)) %>% mutate(ADS_SEARCH_PROPERTY = replace_na(ADS_SEARCH_PROPERTY, 0)) %>% mutate(BFS_CONSENT_GIVEN = replace_na(BFS_CONSENT_GIVEN, 0)) %>% mutate(BFS_OFFICER_SAFETY = replace_na(BFS_OFFICER_SAFETY, 0)) %>% mutate(BFS_SEARCH_WARRANT = replace_na(BFS_SEARCH_WARRANT, 0)) %>% mutate(BFS_PAROLE = replace_na(BFS_PAROLE, 0)) %>% mutate(BFS_SUSPECT_WEAPON = replace_na(BFS_SUSPECT_WEAPON, 0)) %>% mutate(BFS_VISIBLE_CONTRABAND = replace_na(BFS_VISIBLE_CONTRABAND, 0)) %>% mutate(BFS_ODOR_CONTRABAND = replace_na(BFS_ODOR_CONTRABAND, 0)) %>% mutate(BFS_CANINE_DETECT = replace_na(BFS_CANINE_DETECT, 0)) %>% mutate(BFS_EVIDENCE = replace_na(BFS_EVIDENCE, 0)) %>% mutate(BFS_INCIDENT = replace_na(BFS_INCIDENT, 0)) %>% mutate(BFS_EXIGENT_CIRCUM = replace_na(BFS_EXIGENT_CIRCUM, 0)) %>% mutate(BFS_VEHICLE_INVENT = replace_na(BFS_VEHICLE_INVENT, 0)) %>% mutate(BFS_SCHOOL_POLICY = replace_na(BFS_SCHOOL_POLICY, 0)) 
+# SUZANNE: RUN THIS #1
+RIPA_annotated <- RIPA.Stop.Data.2018 %>% select (-c(G_FEMALE, G_GENDER_NONCONFORMING, G_MALE, G_TRANSGENDER_MAN, G_TRANSGENDER_WOMAN, G_FULL, G_MULTIGENDER)) %>% select(1:14, GENDER, everything()) %>% mutate(ADS_SEARCH_PERSON = replace_na(ADS_SEARCH_PERSON, 0)) %>% mutate(ADS_SEARCH_PROPERTY = replace_na(ADS_SEARCH_PROPERTY, 0)) %>% mutate(BFS_CONSENT_GIVEN = replace_na(BFS_CONSENT_GIVEN, 0)) %>% mutate(BFS_OFFICER_SAFETY = replace_na(BFS_OFFICER_SAFETY, 0)) %>% mutate(BFS_SEARCH_WARRANT = replace_na(BFS_SEARCH_WARRANT, 0)) %>% mutate(BFS_PAROLE = replace_na(BFS_PAROLE, 0)) %>% mutate(BFS_SUSPECT_WEAPON = replace_na(BFS_SUSPECT_WEAPON, 0)) %>% mutate(BFS_VISIBLE_CONTRABAND = replace_na(BFS_VISIBLE_CONTRABAND, 0)) %>% mutate(BFS_ODOR_CONTRABAND = replace_na(BFS_ODOR_CONTRABAND, 0)) %>% mutate(BFS_CANINE_DETECT = replace_na(BFS_CANINE_DETECT, 0)) %>% mutate(BFS_EVIDENCE = replace_na(BFS_EVIDENCE, 0)) %>% mutate(BFS_INCIDENT = replace_na(BFS_INCIDENT, 0)) %>% mutate(BFS_EXIGENT_CIRCUM = replace_na(BFS_EXIGENT_CIRCUM, 0)) %>% mutate(BFS_VEHICLE_INVENT = replace_na(BFS_VEHICLE_INVENT, 0)) %>% mutate(BFS_SCHOOL_POLICY = replace_na(BFS_SCHOOL_POLICY, 0))
 
 head(RIPA_annotated)
 ```
@@ -55,4 +56,30 @@ RIPA_ban_pretext_impact <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(c
 
 write_csv(RIPA_ban_pretext_impact, path="./RIPA_ban_pretext_impact.csv")
 
+```
+
+```{r message=FALSE, warning=FALSE}
+
+# SUZANNE RUN ALL THIS vvvv
+
+RIPA_annotated$STOP_CODE <- paste(RIPA_annotated$ROS_WARNING_CDS,RIPA_annotated$ROS_CITATION_CDS,RIPA_annotated$ROS_IN_FIELD_CITE_RELEASE_CDS,RIPA_annotated$ROS_CUSTODIAL_WOUT_WARRANT_CDS,sep=",")
+
+RIPA_force_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>%mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% mutate(firearm_discharge_count = ifelse(ADS_FIREARM_DISCHARGE == 1, 1, 0)) %>% select(c(STOP_CODE, contains("count"), DOJ_RECORD_ID))
+
+RIPA_annotated_codes_final <- RIPA_force_counts %>% mutate(STOP_CODE = strsplit(as.character(STOP_CODE), ",")) %>% unnest(STOP_CODE) %>% mutate(STOP_CODE = as.numeric(STOP_CODE)) 
+
+
+RIPA_join_cds <- left_join(RIPA_force_counts, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) 
+
+RIPA_force_counts %>% count(ROS_CUSTODIAL_WOUT_WARRANT_CDS)
+
+%>% mutate(force_count_low_offense = ifelse(use_of_force_count == 1 & Offense.Level != "F", 1, 0)) %>% (mutate(firearm_discharge_count_low_offense = ifelse(firearm_discharge_count == 1 & Offense.Level != "F", 1, 0))) %>% summarize(
+  STOP_COUNT = sum(count),
+  FORCE_COUNT = sum(use_of_force_count),
+  FORCE_COUNT_LOW_OFFENSE = sum(force_count_low_offense),
+  PERCENT_FORCE_LOW_OFFENSE = (FORCE_COUNT_LOW_OFFENSE / FORCE_COUNT) * 100,
+  FIREARM_DISCHARGE_COUNT = sum(firearm_discharge_count),
+  FIREARM_DISCHARGE_COUNT_LOW_OFFENSE = sum(firearm_discharge_count_low_offense),
+  PERCENT_FIREARM_DISCHARGE_LOW_OFFENSE = (FIREARM_DISCHARGE_COUNT_LOW_OFFENSE / FIREARM_DISCHARGE_COUNT) * 100
+) 
 ```
