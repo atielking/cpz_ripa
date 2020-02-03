@@ -1,0 +1,58 @@
+---
+title: "General Stops"
+author: "Allison Tielking"
+date: "2/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Libraries
+library(tidyverse)
+options(scipen=999)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+# Parameters
+head(RIPA.Stop.Data.2018)
+
+RIPA_annotated <- RIPA.Stop.Data.2018 %>% select (-c(G_FEMALE, G_GENDER_NONCONFORMING, G_MALE, G_TRANSGENDER_MAN, G_TRANSGENDER_WOMAN, G_FULL, G_MULTIGENDER)) %>% select(1:14, GENDER, everything()) %>% mutate(ADS_SEARCH_PERSON = replace_na(ADS_SEARCH_PERSON, 0)) %>% mutate(ADS_SEARCH_PROPERTY = replace_na(ADS_SEARCH_PROPERTY, 0)) %>% mutate(BFS_CONSENT_GIVEN = replace_na(BFS_CONSENT_GIVEN, 0)) %>% mutate(BFS_OFFICER_SAFETY = replace_na(BFS_OFFICER_SAFETY, 0)) %>% mutate(BFS_SEARCH_WARRANT = replace_na(BFS_SEARCH_WARRANT, 0)) %>% mutate(BFS_PAROLE = replace_na(BFS_PAROLE, 0)) %>% mutate(BFS_SUSPECT_WEAPON = replace_na(BFS_SUSPECT_WEAPON, 0)) %>% mutate(BFS_VISIBLE_CONTRABAND = replace_na(BFS_VISIBLE_CONTRABAND, 0)) %>% mutate(BFS_ODOR_CONTRABAND = replace_na(BFS_ODOR_CONTRABAND, 0)) %>% mutate(BFS_CANINE_DETECT = replace_na(BFS_CANINE_DETECT, 0)) %>% mutate(BFS_EVIDENCE = replace_na(BFS_EVIDENCE, 0)) %>% mutate(BFS_INCIDENT = replace_na(BFS_INCIDENT, 0)) %>% mutate(BFS_EXIGENT_CIRCUM = replace_na(BFS_EXIGENT_CIRCUM, 0)) %>% mutate(BFS_VEHICLE_INVENT = replace_na(BFS_VEHICLE_INVENT, 0)) %>% mutate(BFS_SCHOOL_POLICY = replace_na(BFS_SCHOOL_POLICY, 0))
+
+head(RIPA_annotated)
+```
+
+```{r}
+
+RIPA_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_traffic = ifelse(REASON_FOR_STOP == 1, 1, 0)) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(count_search_traffic = ifelse(count_search == 1 & count_traffic == 1, 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(search_no_weapon_count = count_search == 1 & CED_FIREARM == 0 & CED_AMMUNITION == 0 & CED_WEAPON == 0) %>% mutate(contraband_traffic_count = ifelse(contraband_count == 1 & count_traffic == 1, 1, 0)) %>% mutate(arrest_count = ifelse(ROS_CUSTODIAL_WITHOUT_WARRANT == 1, 1, 0)) %>% mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% summarize(
+  STOP_COUNT = sum(count),
+  STOP_COUNT_TRAFFIC = sum(count_traffic),
+  SEARCH_COUNT = sum(count_search),
+  SEARCH_CONSENT_COUNT = sum(count_search_consent),
+  SEARCH_TRAFFIC_COUNT = sum(count_search_traffic),
+  CONTRABAND_COUNT = sum(contraband_count),
+  CONTRABAND_TRAFFIC_COUNT = sum(contraband_traffic_count),
+  SEARCH_NO_WEAPON_COUNT = sum(search_no_weapon_count),
+  ARREST_COUNT = sum(arrest_count),
+  USE_FORCE_COUNT = sum(use_of_force_count)
+) %>% mutate(SEARCH_COUNT = replace_na(SEARCH_COUNT, 0)) %>% mutate(SEARCH_CONSENT_COUNT = replace_na(SEARCH_CONSENT_COUNT, 0)) %>% mutate(SEARCH_TRAFFIC_COUNT = replace_na(SEARCH_TRAFFIC_COUNT, 0)) %>% mutate(CONTRABAND_COUNT = replace_na(CONTRABAND_COUNT, 0)) %>% mutate(CONTRABAND_TRAFFIC_COUNT = replace_na(CONTRABAND_TRAFFIC_COUNT, 0)) %>% mutate(USE_FORCE_COUNT = replace_na(USE_FORCE_COUNT, 0)) 
+```
+
+```{r}
+RIPA_stops_pop <- left_join(RIPA_counts, Populationtotals, by=c("AGENCY_NAME" = "Agency")) %>% mutate(STOP_RATE_PER_1000 = (STOP_COUNT / Total) * 1000) %>% mutate(STOP_RATE_TRAFFIC_PER_1000 = (STOP_COUNT_TRAFFIC / Total) * 1000) %>% mutate(SEARCH_RATE_PER_100_STOPS = (SEARCH_COUNT / STOP_COUNT) * 100) %>% mutate(SEARCH_RATE_CONSENT_PER_100_STOPS = (SEARCH_CONSENT_COUNT / STOP_COUNT) * 100) %>% mutate(SEARCH_RATE_PER_100_TRAFFIC_STOPS = (SEARCH_TRAFFIC_COUNT / STOP_COUNT_TRAFFIC) * 100) %>% 
+  mutate(CONTRABAND_RATE_PER_100_SEARCHES = ifelse(SEARCH_COUNT == 0, 0, (CONTRABAND_COUNT / SEARCH_COUNT) * 100)) %>%
+  mutate(CONTRABAND_RATE_PER_100_TRAFFIC_SEARCHES = if_else(SEARCH_TRAFFIC_COUNT == 0, 0, (CONTRABAND_TRAFFIC_COUNT / SEARCH_TRAFFIC_COUNT) * 100)) %>% mutate(SEARCH_NO_WEAPON_PERCENT = (SEARCH_NO_WEAPON_COUNT / SEARCH_COUNT) * 100) %>%
+  mutate(ARREST_RATE_PER_100_STOPS = (ARREST_COUNT / STOP_COUNT) * 100) %>%
+  mutate(FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100) %>% select(-c(Hispanic, White, Black, `Native American`, Asian, `Pacific Islander`, Multiracial, Total, STOP_COUNT, contains("COUNT")))
+
+RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_FIREARM)
+RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_WEAPON)
+RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_AMMUNITION)
+
+write_csv(RIPA_stops_pop, path="./RIPA_general_stops.csv")
+#write_csv(RIPA_counts, path="./RIPA_stops_count.csv")
+#write_csv(Populationtotals_gather, path="./population_counts")
+
+
+```
+
