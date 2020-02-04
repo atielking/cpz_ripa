@@ -59,26 +59,39 @@ write_csv(RIPA_ban_pretext_impact, path="./RIPA_ban_pretext_impact.csv")
 
 ```{r message=FALSE, warning=FALSE}
 
-# SUZANNE RUN ALL THIS vvvv
-
 RIPA_annotated$STOP_CODE <- paste(RIPA_annotated$ROS_WARNING_CDS,RIPA_annotated$ROS_CITATION_CDS,RIPA_annotated$ROS_IN_FIELD_CITE_RELEASE_CDS,RIPA_annotated$ROS_CUSTODIAL_WOUT_WARRANT_CDS,sep=",")
 
-RIPA_force_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>%mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% mutate(firearm_discharge_count = ifelse(ADS_FIREARM_DISCHARGE == 1, 1, 0)) %>% select(c(STOP_CODE, contains("count"), DOJ_RECORD_ID))
+RIPA_force_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% mutate(firearm_discharge_count = ifelse(ADS_FIREARM_DISCHARGE == 1, 1, 0)) %>% select(c(STOP_CODE, contains("count"), DOJ_RECORD_ID))
 
-RIPA_annotated_codes_final <- RIPA_force_counts %>% mutate(STOP_CODE = strsplit(as.character(STOP_CODE), ",")) %>% unnest(STOP_CODE) %>% mutate(STOP_CODE = as.numeric(STOP_CODE)) 
+# RIPA_force_counts <- RIPA_force_counts[!is.na(RIPA_force_counts$use_of_force_count), ]
+
+RIPA_annotated_codes <- RIPA_force_counts %>% mutate(STOP_CODE = strsplit(as.character(STOP_CODE), ",")) %>% unnest_legacy(STOP_CODE) %>% mutate(STOP_CODE = as.numeric(STOP_CODE))
+
+RIPA_annotated_codes_final <- RIPA_annotated_codes[!is.na(RIPA_annotated_codes$STOP_CODE), ]
+
+RIPA_join_cds <- left_join(RIPA_annotated_codes_final, CDS_Codes, by=c("STOP_CODE"="CDS.Code")) %>% select(-c(STOP_CODE, Offense.Description)) %>% mutate(Offense.Level = ifelse(Offense.Level == "F", "Felony", "Low-Level"))
+
+low_level <- RIPA_join_cds %>% group_by(DOJ_RECORD_ID) %>% summarize(IS_LOW_LEVEL = ifelse(any(Offense.Level == "Felony"), FALSE, TRUE))
+
+#RIPA_join_cds <- RIPA_join_cds %>% select(-c(Offense.Level))
+
+RIPA_low_level <- left_join(low_level, RIPA_join_cds, by="DOJ_RECORD_ID")
+
+RIPA_low_level_final <- RIPA_low_level[!is.na(RIPA_low_level$IS_LOW_LEVEL), ]
 
 
-RIPA_join_cds <- left_join(RIPA_force_counts, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) 
-
-RIPA_force_counts %>% count(ROS_CUSTODIAL_WOUT_WARRANT_CDS)
-
-%>% mutate(force_count_low_offense = ifelse(use_of_force_count == 1 & Offense.Level != "F", 1, 0)) %>% (mutate(firearm_discharge_count_low_offense = ifelse(firearm_discharge_count == 1 & Offense.Level != "F", 1, 0))) %>% summarize(
-  STOP_COUNT = sum(count),
+RIPA_force_low_level <- RIPA_low_level_final %>% mutate(force_originate_low_level_count = ifelse(IS_LOW_LEVEL & use_of_force_count == 1, 1, 0)) %>% mutate(gunshot_originate_low_level_count = ifelse(IS_LOW_LEVEL & firearm_discharge_count == 1, 1, 0)) %>% group_by(AGENCY_NAME) %>% summarise(
   FORCE_COUNT = sum(use_of_force_count),
-  FORCE_COUNT_LOW_OFFENSE = sum(force_count_low_offense),
-  PERCENT_FORCE_LOW_OFFENSE = (FORCE_COUNT_LOW_OFFENSE / FORCE_COUNT) * 100,
   FIREARM_DISCHARGE_COUNT = sum(firearm_discharge_count),
-  FIREARM_DISCHARGE_COUNT_LOW_OFFENSE = sum(firearm_discharge_count_low_offense),
-  PERCENT_FIREARM_DISCHARGE_LOW_OFFENSE = (FIREARM_DISCHARGE_COUNT_LOW_OFFENSE / FIREARM_DISCHARGE_COUNT) * 100
-) 
+  FORCE_ORIGINATE_LOW_LEVEL_COUNT = sum(force_originate_low_level_count),
+  GUNSHOT_ORIGINATE_LOW_LEVEL_COUNT = sum(gunshot_originate_low_level_count),
+  PERCENT_FORCE_ORIGINATE_LOW_LEVEL = (FORCE_ORIGINATE_LOW_LEVEL_COUNT / FORCE_COUNT) * 100,
+  PERCENT_GUNSHOT_ORIGINATE_LOW_LEVEL = ifelse(FIREARM_DISCHARGE_COUNT == 0, 0, (GUNSHOT_ORIGINATE_LOW_LEVEL_COUNT / FIREARM_DISCHARGE_COUNT) * 100)
+)
+
+RIPA_force %>% group_by(AGENCY_NAME) %>% count(use_of_force_count)
+
+# RIPA_force_low_level <- RIPA_force_low_level[!is.na(RIPA_force_low_level$AGENCY_NAME), ]
+
+
 ```
