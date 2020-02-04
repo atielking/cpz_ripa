@@ -24,7 +24,7 @@ head(RIPA_annotated)
 
 ```{r}
 
-RIPA_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_traffic = ifelse(REASON_FOR_STOP == 1, 1, 0)) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(count_search_traffic = ifelse(count_search == 1 & count_traffic == 1, 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(search_no_weapon_count = count_search == 1 & CED_FIREARM == 0 & CED_AMMUNITION == 0 & CED_WEAPON == 0) %>% mutate(contraband_traffic_count = ifelse(contraband_count == 1 & count_traffic == 1, 1, 0)) %>% mutate(arrest_count = ifelse(ROS_CUSTODIAL_WITHOUT_WARRANT == 1, 1, 0)) %>% mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% summarize(
+RIPA_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_traffic = ifelse(REASON_FOR_STOP == 1, 1, 0)) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(count_search_traffic = ifelse(count_search == 1 & count_traffic == 1, 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(search_no_weapon_count = count_search == 1 & CED_FIREARM == 0 & CED_AMMUNITION == 0 & CED_WEAPON == 0) %>% mutate(contraband_traffic_count = ifelse(contraband_count == 1 & count_traffic == 1, 1, 0)) %>% mutate(arrest_count = ifelse(ROS_CUSTODIAL_WITHOUT_WARRANT == 1 | ROS_CITATION == 1, 1, 0)) %>% mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% summarize(
   STOP_COUNT = sum(count),
   STOP_COUNT_TRAFFIC = sum(count_traffic),
   SEARCH_COUNT = sum(count_search),
@@ -49,7 +49,7 @@ RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_FIREARM)
 RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_WEAPON)
 RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_AMMUNITION)
 
-write_csv(RIPA_stops_pop, path="./RIPA_general_stops.csv")
+write_csv(RIPA_stops_pop, path="./RIPA_general_stops_add_citation_arrest.csv")
 #write_csv(RIPA_counts, path="./RIPA_stops_count.csv")
 #write_csv(Populationtotals_gather, path="./population_counts")
 
