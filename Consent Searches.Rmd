@@ -25,17 +25,16 @@ head(RIPA_annotated)
 
 
 ```{r message=FALSE, warning=FALSE}
-RIPA_consent_no_weapon <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(contraband_no_weapon_count = count_search == 1 & CED_FIREARM == 0 & CED_AMMUNITION == 0 & CED_WEAPON == 0) %>% mutate(consent_search_no_weapon_count = contraband_no_weapon_count == 1 & count_search_consent == 1) %>% summarize(
+RIPA_consent_no_gun <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>% mutate(count_search = ifelse(ADS_SEARCH_PERSON == 1 |  ADS_SEARCH_PROPERTY == 1, 1, 0)) %>% mutate(count_search_consent = ifelse(count_search == 1 & (BFS_CONSENT_GIVEN == 1 & BFS_OFFICER_SAFETY == 0 & BFS_SEARCH_WARRANT == 0 & BFS_PAROLE == 0 & BFS_SUSPECT_WEAPON == 0 & BFS_VISIBLE_CONTRABAND == 0 & BFS_ODOR_CONTRABAND == 0 & BFS_CANINE_DETECT == 0 & BFS_EVIDENCE == 0 & BFS_INCIDENT == 0 & BFS_EXIGENT_CIRCUM == 0 & BFS_VEHICLE_INVENT == 0 & BFS_SCHOOL_POLICY == 0), 1, 0)) %>% mutate(contraband_count = ifelse(CED_NONE_CONTRABAND == 0 & count_search == 1, 1, 0)) %>% mutate(contraband_no_gun_count = count_search_consent == 1 & CED_FIREARM == 0) %>% mutate(consent_search_no_weapon_count = contraband_no_gun_count == 1 & count_search_consent == 1) %>% summarize(
   STOP_COUNT = sum(count),
   SEARCH_COUNT = sum(count_search),
   SEARCH_CONSENT_COUNT = sum(count_search_consent),
   CONTRABAND_COUNT = sum(contraband_count),
-  CONTRABAND_NO_WEAPON_COUNT = sum(contraband_no_weapon_count),
-  CONSENT_SEARCH_NO_WEAPON_COUNT = sum(consent_search_no_weapon_count),
-  CONSENT_SEARCH_NO_WEAPON_RATE = (CONSENT_SEARCH_NO_WEAPON_COUNT / SEARCH_CONSENT_COUNT) * 100
+  CONSENT_SEARCH_NO_GUN_COUNT = sum(contraband_no_gun_count),
+  CONSENT_SEARCH_NO_GUN_RATE = (CONSENT_SEARCH_NO_GUN_COUNT / SEARCH_CONSENT_COUNT) * 100
 ) %>% select(-c(SEARCH_COUNT, STOP_COUNT))
 
-write_csv(RIPA_consent_no_weapon, path="./RIPA_consent.csv")
+write_csv(RIPA_consent_no_gun, path="./RIPA_consent_no_gun.csv")
 
 ```
 
