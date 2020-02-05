@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r message=FALSE, warning=FALSE}
+library(tidyverse)
 head(RIPA.Stop.Data.2018)
 
 RIPA_annotated <- RIPA.Stop.Data.2018 %>% 
@@ -28,17 +29,24 @@ RIPA_annotated <- RIPA.Stop.Data.2018 %>%
   mutate(BFS_EXIGENT_CIRCUM = replace_na(BFS_EXIGENT_CIRCUM, 0)) %>%
   mutate(BFS_VEHICLE_INVENT = replace_na(BFS_VEHICLE_INVENT, 0)) %>% 
   mutate(BFS_SCHOOL_POLICY = replace_na(BFS_SCHOOL_POLICY, 0))
+
 ```
 ```{r message=FALSE, warning=FALSE}
 
 RIPA_force <- RIPA_annotated %>% 
   group_by(AGENCY_NAME) %>% 
-  mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% 
-  # filter(use_of_force_count == 1) %>%
-  select(use_of_force_count, ADS_FIREARM_POINT, ADS_FIREARM_DISCHARGE, ADS_BATON, ADS_CHEM_SPRAY, 
-         ADS_IMPACT_DISCHARGE, ADS_CANINE_BITE, ADS_ELECT_DEVICE, ADS_OTHER_CONTACT) 
+  mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | 
+                                       ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | 
+                                       ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | 
+                                       ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% 
+  select(use_of_force_count, ADS_FIREARM_POINT, 
+         ADS_FIREARM_DISCHARGE, ADS_BATON, ADS_CHEM_SPRAY,
+         ADS_IMPACT_DISCHARGE, ADS_CANINE_BITE, 
+         ADS_ELECT_DEVICE, ADS_OTHER_CONTACT) %>% 
+  mutate(use_of_force_count = ifelse(is.na(use_of_force_count), 0, use_of_force_count)) 
 
-# %>% summarize(USE_FORCE_COUNT = sum(use_of_force_count), STOP_COUNT = sum(count), FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100, USE_FORCE_FIREARM_POINT_FREQ = (sum(use_of_force_firearm_point_count) / USE_FORCE_COUNT) * 100 , USE_FORCE_FIREARM_DISCHARGE_FREQ = (sum(use_of_force_firearm_discharge_count) / USE_FORCE_COUNT) * 100, USE_FORCE_BATON_FREQ = (sum(use_of_force_baton_count) / USE_FORCE_COUNT) * 100, USE_FORCE_CHEM_SPRAY_FREQ = (sum(use_of_force_chem_spray_count) / USE_FORCE_COUNT) * 100, USE_FORCE_IMPACT_DISCHARGE_FREQ = (sum(use_of_force_impact_discharge_count) / USE_FORCE_COUNT) * 100, USE_FORCE_CANINE_BITE_FREQ = (sum(use_of_force_canine_bite_count) / USE_FORCE_COUNT) * 100, USE_FORCE_ELECT_DEVICE_FREQ = (sum(use_of_force_elect_device_count) / USE_FORCE_COUNT) * 100, USE_FORCE_OTHER_CONTACT_FREQ = (sum(use_of_force_other_contact_count) / USE_FORCE_COUNT) * 100) %>% select(-c(USE_FORCE_COUNT, STOP_COUNT))
+
+# %>% summarize(USE_FORCE_COUNT = sum(use_of_force_count)), STOP_COUNT = sum(count), FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100, USE_FORCE_FIREARM_POINT_FREQ = (sum(use_of_force_firearm_point_count) / USE_FORCE_COUNT) * 100 , USE_FORCE_FIREARM_DISCHARGE_FREQ = (sum(use_of_force_firearm_discharge_count) / USE_FORCE_COUNT) * 100, USE_FORCE_BATON_FREQ = (sum(use_of_force_baton_count) / USE_FORCE_COUNT) * 100, USE_FORCE_CHEM_SPRAY_FREQ = (sum(use_of_force_chem_spray_count) / USE_FORCE_COUNT) * 100, USE_FORCE_IMPACT_DISCHARGE_FREQ = (sum(use_of_force_impact_discharge_count) / USE_FORCE_COUNT) * 100, USE_FORCE_CANINE_BITE_FREQ = (sum(use_of_force_canine_bite_count) / USE_FORCE_COUNT) * 100, USE_FORCE_ELECT_DEVICE_FREQ = (sum(use_of_force_elect_device_count) / USE_FORCE_COUNT) * 100, USE_FORCE_OTHER_CONTACT_FREQ = (sum(use_of_force_other_contact_count) / USE_FORCE_COUNT) * 100) %>% select(-c(USE_FORCE_COUNT, STOP_COUNT))
 
 write_csv(RIPA_force, path="../RIPA_force_detail.csv")
 
