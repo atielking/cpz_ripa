@@ -70,7 +70,7 @@ RIPA_force_counts <- RIPA_annotated %>% mutate(count = 1) %>% mutate(use_of_forc
 
 RIPA_annotated_codes <- RIPA_force_counts %>% mutate(STOP_CODE = strsplit(as.character(STOP_CODE), ",")) %>% unnest_legacy(STOP_CODE) %>% mutate(STOP_CODE = as.numeric(STOP_CODE)) %>% mutate(STOP_CODE = ifelse(is.na(STOP_CODE), -1, STOP_CODE))
 
-RIPA_join_cds <- left_join(RIPA_annotated_codes, CDS_Codes, by=c("STOP_CODE"="CDS.Code")) %>% select(-c(STOP_CODE, Offense.Description)) %>% mutate(Offense.Level = ifelse(Offense.Level == "F", "Felony", "Low-Level")) %>% mutate(Offense.Level = ifelse(is.na(Offense.Level), "Low-Level", Offense.Level)) %>% arrange(AGENCY_NAME, DOJ_RECORD_ID, Offense.Level) %>% distinct(DOJ_RECORD_ID, AGENCY_NAME, PERSON_NUMBER, .keep_all = TRUE)
+RIPA_join_cds <- left_join(RIPA_annotated_codes, CDS_Codes, by=c("STOP_CODE"="CDS.Code")) %>% select(-c(STOP_CODE, Offense.Description)) %>% mutate(Offense.Level = ifelse(Offense.Level == "M", "Misdemeanor", "Other")) %>% mutate(Offense.Level = ifelse(is.na(Offense.Level), "Other", Offense.Level)) %>% arrange(AGENCY_NAME, DOJ_RECORD_ID, Offense.Level) %>% distinct(DOJ_RECORD_ID, AGENCY_NAME, PERSON_NUMBER, .keep_all = TRUE)
 
 # RIPA_join_cds %>% group_by(AGENCY_NAME) %>% count(Offense.Level)
 

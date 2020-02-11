@@ -1,0 +1,47 @@
+---
+title: "RIPA Force Low Level"
+author: "Allison Tielking"
+date: "2/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(data.table)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+codes <- c("380(A)","381(A)", "381(B)", "381B", "381C(B)", "647(F)", "171F.2", "302(A)", "403", "404(A)", "404(B)", "404.6(A)", "404.6(c)", "405", "406", "407", "408", "409", "415(2)", "415(3)", "415.5(A)(1)", "415.5(A)(2)", "415.5(A)(3)", "416(A)", "602.1", "602.11(A)", "626.2", "626.4(D)", "626.6(A)", "626.7(A)", "626.8(A)(1)", "626.8(A)(2)", "626.8(A)(3)", "626.81(A)", "626.85(A)(1)", "653C(A)", "653C(B)", "653M(A)", "653M(B)", "653X(A)", "727", "9051", "11460(A)", "647(C)", "647(E)", "647(H)", "647B", "653B(A)", "487(D)(1)", "499B(A)", "266", "266A", "266B", "266C", "266D", "266E", "266F", "266G", "315", "316", "647(B)", "653.22(A)", "632.23(A)(2)", "25601", "318", "319", "320", "321", "322", "323", "324", "326", "326.5(B)", "326.5(N)", "330", "330A", "330B(A)", "330C", "330.1", "330.4", "331", "335", "336", "337S(B)", "337.1", "337.2", "337.5", "11300", "19940", "19941(A)(1)", "272", "272(B)(1)", "647(F)", "23103", "23103(A)", "23103(B)", "23104(A)", "23105(A)", "23109", "23109(A)", "23109(B)", "23109(C)", "23109(D)", "38316", "38317", "40508(A)", "40508(B)", "40508(C)", "40519(B)", "42005(E)", "623(A)", "623(A)(1)", "640.5(B)(1)", "640.5(C)(1)", "640.8", "172A", "172B.1", "172D.1", "172G.1", "172L", "303", "303A", "307", "347B", "397", "11200", "23220", "23222(A)", "23224(A)", "23224(B)", "23300", "23301", "25177", "25351", "25602(A)", "25604", "25606", "25607(A)", "25608", "25609", "25612.5(C)(3)", "25620", "25631", "25632", "25657(A)", "25657(B)", "25658(A)", "25658(B)", "25658(C)", "25659.5(C)", "25659.5(D)", "25660.5", "25661", "25662(A)", "25663(A)", "25663(B)", "25664", "25665", "120305", "171F.1", "369G(A)", "369I(A)", "369I(B)", "398", "409.5(C)", "554(A)", "554(B)", "554(C)", "554(D)", "554(E)", "554(F)", "554(G)", "554(H)", "554(I)", "555", "558", "587B", "593B", "602", "602(A)", "602(B)", "602(C)", "602(C)", "602(D)", "602(E)", "602(F)", "602(G)", "602(H)(1)", "602(I)", "602(J)", "602(K)", "602(L)(1)", "602(L)(2)", "602(L)(3)", "602(L)(4)", "602(M)", "602(N)", "602(O)", "602(O)(1)", "602(O)(2)", "602(P)", "602(Q)", "602(R)", "602(S)", "602(T)", "602(U)(1)", "602(V)(1)", "602.1(A)", "602.1(B)", "602.4", "602.5", "602.5(A)", "602.5(B)", "602.6", "602.8(A)", "627.2", "627.7(A)(1)", "627.8", "1583", "27174.2", "32210", "11357(A)", "11357(B)", "11357(C)", "11357(D)", "11357(E)", "11360(B)", "23222(B)", "377", "647(F)", "2241", "2242.1(A)", "2762(E)", "2878.5(A)", "4051", "4059(A)", "4060", "4077(A)", "4140", "4163", "4323", "4324(A)", "4324(B)", "4325(A)", "4326(A)", "4326(B)", "4331(A)", "4332", "11100(G)(3)", "11100.1(A)", "11104(C)", "11104.5", "11150", "11159", "11161(A)", "11162.5(B)", "11162.6(C)", "11170", "11171", "11172", "11173(A)", "11175", "11180", "11190", "11207", "11217", "11350(B)", "11352.1(B)", "11355", "11364", "11364(A)", "11364.7(A)", "11364.7(C)", "11365(A)", "11366", "11368", "11375(B)(2)", "11377(B)(1)", "11377(B)(2)", "11391", "11532(A)", "11550(A)", "11594", "109575", "109580", "11350(A)", "11350(B)", "11353(A)", "11354(A)", "13357(A)", "11358", "11361(B)", "4060", "11353.5", "11353.7", "11370.1(A)", "11377(A)", "11379(A)", "11379.5(A)", "11380(A)", "11550(E)", "4324(A)", "4324(B)", "4336(A)", "11104(A)", "11152", "11153(A)(1)", "11154(A)", "11154(B)", "11155", "11156", "11157", "11162.5(A)", "11166", "11173(A)", "11173(B)", "11173(C)", "11173(D)", "11174", "11363", "11364.7(B)", "11366", "11366.8(A)", "11366.8(B)", "11368", "11370.6(A)", "11370.9(B)", "11370.9(C)", "11371", "11371.1", "11379.6(A)", "11379.6(B)", "11383(A)", "11383(B)", "11383(C)(1)", "11383(C)(2)", "11383(F)", "11383(G)", "11383.5(B)(1)", "11383.5(E)", "11383.7(A)", "11383.7(B)(1)", "11390", "11391")
+df <- data.frame(codes)
+
+low_level_codes <- cds_codes_annotated %>% mutate(IS_LOW_LEVEL = ifelse(Offense.Category %in% df$codes, TRUE, FALSE)) 
+
+RIPA_annotated$STOP_CODE <- paste(RIPA_annotated$ROS_WARNING_CDS,RIPA_annotated$ROS_CITATION_CDS,RIPA_annotated$ROS_IN_FIELD_CITE_RELEASE_CDS,RIPA_annotated$ROS_CUSTODIAL_WOUT_WARRANT_CDS,sep=",")
+
+RIPA_force_counts <- RIPA_annotated %>% mutate(count = 1) %>% mutate(use_of_force_count = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% mutate(firearm_discharge_count = ifelse(ADS_FIREARM_DISCHARGE == 1, 1, 0)) %>% mutate(use_of_force_count = ifelse(is.na(use_of_force_count), 0, use_of_force_count)) %>% mutate(firearm_discharge_count = ifelse(is.na(firearm_discharge_count), 0, firearm_discharge_count)) %>% select(c(AGENCY_NAME, STOP_CODE, PERSON_NUMBER, contains("count"), DOJ_RECORD_ID))
+
+# RIPA_force_counts %>% distinct(DOJ_RECORD_ID, AGENCY_NAME, PERSON_NUMBER)
+# RIPA_force_counts %>% group_by(AGENCY_NAME) %>% count(use_of_force_count)
+
+RIPA_annotated_codes <- RIPA_force_counts %>% mutate(STOP_CODE = strsplit(as.character(STOP_CODE), ",")) %>% unnest_legacy(STOP_CODE) %>% mutate(STOP_CODE = as.numeric(STOP_CODE)) %>% mutate(STOP_CODE = ifelse(is.na(STOP_CODE), -1, STOP_CODE))
+
+RIPA_join_cds <- left_join(RIPA_annotated_codes, CDS_Codes, by=c("STOP_CODE"="CDS.Code")) %>% mutate(IS_LOW_LEVEL = ifelse(str_detect(Offense.Description, "VANDALISM") | str_detect(Offense.Description, "LOITER") | str_detect(Offense.Description, "CURFEW") | str_detect(Offense.Description, "DISORD") | str_detect(Offense.Description, "MENTAL") | str_detect(Offense.Description, "PARAPH") | str_detect(Offense.Description, "TRESPASS") | str_detect(Offense.Description, "LOCAL ORDINANCE") | str_detect(Offense.Description, "PROSTITUT")))
+
+# %>% select(-c(STOP_CODE, Offense.Description)) %>% mutate(Offense.Level = ifelse(Offense.Level == "F", "Felony", "Low-Level")) %>% mutate(Offense.Level = ifelse(is.na(Offense.Level), "Low-Level", Offense.Level)) %>% arrange(AGENCY_NAME, DOJ_RECORD_ID, Offense.Level) %>% distinct(DOJ_RECORD_ID, AGENCY_NAME, PERSON_NUMBER, .keep_all = TRUE)
+
+# RIPA_join_cds %>% group_by(AGENCY_NAME) %>% count(Offense.Level)
+
+RIPA_force_low_level <- RIPA_join_cds %>% mutate(force_originate_low_level_count = ifelse(Offense.Level == "Low-Level" & use_of_force_count == 1, 1, 0)) %>% mutate(gunshot_originate_low_level_count = ifelse(Offense.Level == "Low-Level" & firearm_discharge_count == 1, 1, 0)) %>% group_by(AGENCY_NAME) %>% summarise(
+  FORCE_COUNT = sum(use_of_force_count),
+  FIREARM_DISCHARGE_COUNT = sum(firearm_discharge_count),
+  FORCE_ORIGINATE_LOW_LEVEL_COUNT = sum(force_originate_low_level_count),
+  GUNSHOT_ORIGINATE_LOW_LEVEL_COUNT = sum(gunshot_originate_low_level_count),
+  PERCENT_FORCE_ORIGINATE_LOW_LEVEL = (FORCE_ORIGINATE_LOW_LEVEL_COUNT / FORCE_COUNT) * 100,
+  PERCENT_GUNSHOT_ORIGINATE_LOW_LEVEL = ifelse(FIREARM_DISCHARGE_COUNT == 0, 0, (GUNSHOT_ORIGINATE_LOW_LEVEL_COUNT / FIREARM_DISCHARGE_COUNT) * 100)
+)
+
+write_csv(RIPA_force_low_level, path="./RIPA_force_low_level.csv")
+
+```
