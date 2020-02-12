@@ -25,9 +25,14 @@ RIPA.Stop.Data.2018$RACE <-
   ifelse(RIPA.Stop.Data.2018$RAE_FULL == 5, "Native American", 
   ifelse(RIPA.Stop.Data.2018$RAE_FULL == 6, "Pacific Islander", "White")))))))
 
-RIPA_r <- RIPA.Stop.Data.2018 %>% select(-starts_with('RAE_')) %>% select(1:13, RACE, everything()) 
+RIPA_r <- RIPA.Stop.Data.2018 %>% 
+  select(-starts_with('RAE_')) %>% 
+  select(1:13, RACE, everything()) 
 
-RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>% unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>% mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
+RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>%
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>%
+  unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
 
 RIPA_arrest_join_code <- RIPA_arrest_codes %>% inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
 

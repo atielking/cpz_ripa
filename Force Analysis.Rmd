@@ -48,7 +48,7 @@ RIPA_force <- RIPA_annotated %>%
 
 # %>% summarize(USE_FORCE_COUNT = sum(use_of_force_count)), STOP_COUNT = sum(count), FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100, USE_FORCE_FIREARM_POINT_FREQ = (sum(use_of_force_firearm_point_count) / USE_FORCE_COUNT) * 100 , USE_FORCE_FIREARM_DISCHARGE_FREQ = (sum(use_of_force_firearm_discharge_count) / USE_FORCE_COUNT) * 100, USE_FORCE_BATON_FREQ = (sum(use_of_force_baton_count) / USE_FORCE_COUNT) * 100, USE_FORCE_CHEM_SPRAY_FREQ = (sum(use_of_force_chem_spray_count) / USE_FORCE_COUNT) * 100, USE_FORCE_IMPACT_DISCHARGE_FREQ = (sum(use_of_force_impact_discharge_count) / USE_FORCE_COUNT) * 100, USE_FORCE_CANINE_BITE_FREQ = (sum(use_of_force_canine_bite_count) / USE_FORCE_COUNT) * 100, USE_FORCE_ELECT_DEVICE_FREQ = (sum(use_of_force_elect_device_count) / USE_FORCE_COUNT) * 100, USE_FORCE_OTHER_CONTACT_FREQ = (sum(use_of_force_other_contact_count) / USE_FORCE_COUNT) * 100) %>% select(-c(USE_FORCE_COUNT, STOP_COUNT))
 
-write_csv(RIPA_force, path="../RIPA_force_detail.csv")
+write_csv(RIPA_force, path="../RIPA_force_detail1.csv")
 
 
 ```

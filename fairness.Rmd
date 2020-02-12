@@ -1,0 +1,108 @@
+---
+title: "Fairness"
+author: "Suzanne Joh"
+date: "2/09/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Libraries
+library(tidyverse)
+options(scipen=999)
+```
+
+```{r message=FALSE, warning=FALSE}
+# Parameters
+head(RIPA.Stop.Data.2018)
+
+# Clean Race data (convert numbers to name)
+RIPA.Stop.Data.2018$RACE <- 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 1, "Asian",
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 2, "Black", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 3, "Hispanic", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 4, "Asian", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 8, "Multiracial", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 5, "Native American", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 6, "Pacific Islander", "White")))))))
+
+# Select only relevant cols
+RIPA_r <- RIPA.Stop.Data.2018 %>% 
+  select(-starts_with('RAE_')) %>% 
+  select(1:13, RACE, everything()) %>%
+  select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WITHOUT_WARRANT, ROS_CUSTODIAL_WOUT_WARRANT_CDS)
+
+# Calculate stop counts per agency by demographic
+RIPA_stop_counts <- RIPA_r %>%
+  group_by(AGENCY_NAME, RACE) %>% 
+  summarise(WHITE_STOP_COUNT = sum(RACE == "White"), 
+            BLACK_STOP_COUNT = sum(RACE == "Black"),
+            HISPANIC_STOP_COUNT = sum(RACE == "Hispanic"), 
+            ASIAN_STOP_COUNT = sum(RACE == "Asian"), 
+            MULTIRACIAL_STOP_COUNT = sum(RACE == "Multiracial"), 
+            NATIVEAM_STOP_COUNT = sum(RACE == "Native American"),
+            PACISL_STOP_COUNT = sum(RACE == "Pacific Islander")) %>%
+  select(-RACE) %>%
+  group_by(AGENCY_NAME) %>% 
+  summarise_all(funs(sum))
+
+# Convert and join arrest codes, calc offense counts 
+RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>%
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>%
+  unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
+
+RIPA_arrest_join_code <- 
+  RIPA_arrest_codes %>% 
+  inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
+
+RIPA_arrest_offense_counts <- 
+  RIPA_arrest_join_code %>% 
+  group_by(AGENCY_NAME, Offense.Description, Offense.Level) %>% 
+  summarise(TOTAL = n(), 
+            WHITE_ARRESTS_COUNT = sum(RACE == "White"), 
+            BLACK_ARRESTS_COUNT = sum(RACE == "Black"), 
+            HISPANIC_ARRESTS_COUNT = sum(RACE == "Hispanic"), 
+            ASIAN_ARRESTS_COUNT = sum(RACE == "Asian"), 
+            MULTIRACIAL_ARRESTS_COUNT = sum(RACE == "Multiracial"), 
+            NATIVEAM_ARRESTS_COUNT = sum(RACE == "Native American"),
+            PACISL_ARRESTS_COUNT = sum(RACE == "Pacific Islander")) %>% 
+  filter(TOTAL >= 50, Offense.Level != "F") %>% 
+  ungroup()
+ 
+```
+```{r message=FALSE, warning=FALSE}
+
+# Combine offense count data and stop count data, use to figure out proportion of 
+# stops per demographic result in arrest (per offense category)
+RIPA_total_join <-
+  RIPA_arrest_offense_counts %>%
+  inner_join(RIPA_stop_counts) %>%
+  mutate(WHITE_PROP = WHITE_ARRESTS_COUNT / WHITE_STOP_COUNT,
+         BLACK_PROP = BLACK_ARRESTS_COUNT / BLACK_STOP_COUNT,
+         HISPANIC_PROP = HISPANIC_ARRESTS_COUNT / HISPANIC_STOP_COUNT,
+         ASIAN_PROP = ASIAN_ARRESTS_COUNT / ASIAN_STOP_COUNT,
+         MULTIRACIAL_PROP = MULTIRACIAL_ARRESTS_COUNT / MULTIRACIAL_STOP_COUNT,
+         NATIVEAM_PROP = NATIVEAM_ARRESTS_COUNT / NATIVEAM_STOP_COUNT,
+         PACISL_PROP = PACISL_ARRESTS_COUNT / PACISL_STOP_COUNT)
+
+# Keeps only prop columns, appends mean per row (across each demographic)
+RIPA_props <- RIPA_total_join %>%
+  select(-ends_with("_COUNT"), -matches("TOTAL")) %>%
+  mutate(MEAN = select(., ends_with("_PROP")) %>% 
+           rowMeans(.))
+
+# Calculates "fairness level" using prop per demographic and mean across all demographics
+RIPA_fairness <- RIPA_props %>%
+  mutate(WHITE = WHITE_PROP / MEAN,
+         BLACK = BLACK_PROP / MEAN,
+         HISPANIC = HISPANIC_PROP / MEAN,
+         ASIAN = ASIAN_PROP / MEAN,
+         MULTIRACIAL = MULTIRACIAL_PROP / MEAN,
+         NATIVEAM = NATIVEAM_PROP / MEAN,
+         PACISL = PACISL_PROP / MEAN) %>%
+  select(-ends_with("_PROP"))
+
+write_csv(RIPA_fairness, path="./RIPA_fairness.csv")
+```
+
