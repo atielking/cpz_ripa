@@ -39,20 +39,20 @@ RIPA_counts <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(count = 1) %>
 ```
 
 ```{r}
-RIPA_stops_pop <- left_join(RIPA_counts, Populationtotals, by=c("AGENCY_NAME" = "Agency")) %>% mutate(STOP_RATE_PER_1000 = (STOP_COUNT / Total) * 1000) %>% mutate(STOP_RATE_TRAFFIC_PER_1000 = (STOP_COUNT_TRAFFIC / Total) * 1000) %>% mutate(SEARCH_RATE_PER_100_STOPS = (SEARCH_COUNT / STOP_COUNT) * 100) %>% mutate(SEARCH_RATE_CONSENT_PER_100_STOPS = (SEARCH_CONSENT_COUNT / STOP_COUNT) * 100) %>% mutate(SEARCH_RATE_PER_100_TRAFFIC_STOPS = (SEARCH_TRAFFIC_COUNT / STOP_COUNT_TRAFFIC) * 100) %>% 
-  mutate(CONTRABAND_RATE_PER_100_SEARCHES = ifelse(SEARCH_COUNT == 0, 0, (CONTRABAND_COUNT / SEARCH_COUNT) * 100)) %>%
-  mutate(CONTRABAND_RATE_PER_100_TRAFFIC_SEARCHES = if_else(SEARCH_TRAFFIC_COUNT == 0, 0, (CONTRABAND_TRAFFIC_COUNT / SEARCH_TRAFFIC_COUNT) * 100)) %>% mutate(SEARCH_NO_GUN_PERCENT = (SEARCH_NO_GUN_COUNT / SEARCH_COUNT) * 100) %>%
+# RIPA_stops_pop <- left_join(RIPA_counts, Populationtotals, by=c("AGENCY_NAME" = "Agency")) %>% mutate(STOP_RATE_PER_1000 = (STOP_COUNT / Total) * 1000) %>% mutate(STOP_RATE_TRAFFIC_PER_1000 = (STOP_COUNT_TRAFFIC / Total) * 1000) %>% mutate(SEARCH_RATE_PER_100_STOPS = (SEARCH_COUNT / STOP_COUNT) * 100) %>% mutate(SEARCH_RATE_CONSENT_PER_100_STOPS = (SEARCH_CONSENT_COUNT / STOP_COUNT) * 100) %>% mutate(SEARCH_RATE_PER_100_TRAFFIC_STOPS = (SEARCH_TRAFFIC_COUNT / STOP_COUNT_TRAFFIC) * 100) %>% 
+#   mutate(CONTRABAND_RATE_PER_100_SEARCHES = ifelse(SEARCH_COUNT == 0, 0, (CONTRABAND_COUNT / SEARCH_COUNT) * 100)) %>%
+#   mutate(CONTRABAND_RATE_PER_100_TRAFFIC_SEARCHES = if_else(SEARCH_TRAFFIC_COUNT == 0, 0, (CONTRABAND_TRAFFIC_COUNT / SEARCH_TRAFFIC_COUNT) * 100)) %>% mutate(SEARCH_NO_GUN_PERCENT = (SEARCH_NO_GUN_COUNT / SEARCH_COUNT) * 100) %>%
+#   mutate(ARREST_RATE_PER_100_STOPS = (ARREST_COUNT / STOP_COUNT) * 100) %>%
+#   mutate(FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100) %>% select(-c(Hispanic, White, Black, `Native American`, Asian, `Pacific Islander`, Multiracial, Total, STOP_COUNT, contains("COUNT")))
+
+RIPA_general_trends <- left_join(RIPA_counts, Populationtotals, by=c("AGENCY_NAME" = "Agency")) %>% 
+  mutate(STOP_RATE_PER_1000 = (STOP_COUNT / Total) * 1000) %>%
+  mutate(SEARCH_RATE_PER_100_STOPS = (SEARCH_COUNT / STOP_COUNT) * 100) %>%
   mutate(ARREST_RATE_PER_100_STOPS = (ARREST_COUNT / STOP_COUNT) * 100) %>%
-  mutate(FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100) %>% select(-c(Hispanic, White, Black, `Native American`, Asian, `Pacific Islander`, Multiracial, Total, STOP_COUNT, contains("COUNT")))
+  mutate(FORCE_RATE_PER_100_STOPS = (USE_FORCE_COUNT / STOP_COUNT) * 100) %>% 
+  select(-c(Hispanic, White, Black, `Native American`, Asian, `Pacific Islander`, Multiracial, Total, STOP_COUNT, contains("COUNT")))
 
-RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_FIREARM)
-RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_WEAPON)
-RIPA_annotated %>% count(CED_NONE_CONTRABAND, CED_AMMUNITION)
-
-write_csv(RIPA_stops_pop, path="./RIPA_general_stops_add_citation_arrest.csv")
-#write_csv(RIPA_counts, path="./RIPA_stops_count.csv")
-#write_csv(Populationtotals_gather, path="./population_counts")
-
+write_csv(RIPA_general_trends, path="./RIPA_general_trends.csv")
 
 ```
 
