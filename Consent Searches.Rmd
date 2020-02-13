@@ -53,7 +53,7 @@ RIPA_ban_pretext_impact <- RIPA_annotated %>% group_by(AGENCY_NAME) %>% mutate(c
   FIREARM_DISCHARGE_COUNT_BAN_PRETEXT = sum(firearm_discharge_count_ban_pretext) * 2,
   IMPACT_PEOPLE_GUNSHOT_BAN_YEAR = (FIREARM_DISCHARGE_COUNT - FIREARM_DISCHARGE_COUNT_BAN_PRETEXT) * 2,
   PERCENT_DIFF_FIREARM_DISCHARGE_BAN = ((FIREARM_DISCHARGE_COUNT_BAN_PRETEXT - FIREARM_DISCHARGE_COUNT) / FIREARM_DISCHARGE_COUNT) * 100
-) 
+) %>% select(c(AGENCY_NAME, contains("IMPACT")))
 
 write_csv(RIPA_ban_pretext_impact, path="./RIPA_ban_pretext_impact.csv")
 
