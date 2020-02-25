@@ -86,13 +86,13 @@ RIPA_total_join <-
          NATIVEAM_PROP = NATIVEAM_ARRESTS_COUNT / NATIVEAM_STOP_COUNT,
          PACISL_PROP = PACISL_ARRESTS_COUNT / PACISL_STOP_COUNT)
 
-# Keeps only prop columns, appends mean per row (across each demographic)
+# Keep only prop columns, append mean per row (across each demographic)
 RIPA_props <- RIPA_total_join %>%
   select(-ends_with("_COUNT"), -matches("TOTAL")) %>%
   mutate(MEAN = select(., ends_with("_PROP")) %>% 
            rowMeans(.))
 
-# Calculates "fairness level" using prop per demographic and mean across all demographics
+# Calculate "fairness level" using prop per demographic and mean across all demographics
 RIPA_fairness <- RIPA_props %>%
   mutate(WHITE = WHITE_PROP / MEAN,
          BLACK = BLACK_PROP / MEAN,
