@@ -1,0 +1,36 @@
+---
+title: "Significance Dataset Generator"
+author: "Allison Tielking"
+date: "2/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+head(RIPA.Stop.Data.2018)
+
+RIPA.Stop.Data.2018$RACE <- 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 1, "Asian",
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 2, "Black", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 3, "Hispanic", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 4, "Asian", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 8, "Multiracial", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 5, "Native American", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 6, "Pacific Islander", "White")))))))
+
+simplified_ripa_black <- RIPA.Stop.Data.2018 %>% filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White")) %>% select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS))
+
+simplified_ripa_black_codes <- left_join(simplified_ripa_black, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) %>% select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% rename(OFFENSE = Offense.Description)
+
+simplified_ripa_hispanic <- RIPA.Stop.Data.2018 %>% filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Hispanic" | RACE == "White")) %>% select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS))
+
+simplified_ripa_hispanic_codes <- left_join(simplified_ripa_hispanic, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) %>% select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% rename(OFFENSE = Offense.Description)
+
+write_csv(simplified_ripa_bhispanic_codes, path="../ripa_sf_hispanic_arrest.csv")
+
+
+```
