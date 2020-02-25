@@ -22,15 +22,42 @@ RIPA.Stop.Data.2018$RACE <-
   ifelse(RIPA.Stop.Data.2018$RAE_FULL == 5, "Native American", 
   ifelse(RIPA.Stop.Data.2018$RAE_FULL == 6, "Pacific Islander", "White")))))))
 
-simplified_ripa_black <- RIPA.Stop.Data.2018 %>% filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White")) %>% select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS))
+# Select only relevant cols
+RIPA_r <- RIPA.Stop.Data.2018 %>% 
+  select(-starts_with('RAE_')) %>% 
+  select(1:13, RACE, everything()) %>%
+  select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WITHOUT_WARRANT, ROS_CUSTODIAL_WOUT_WARRANT_CDS)
 
-simplified_ripa_black_codes <- left_join(simplified_ripa_black, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) %>% select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% rename(OFFENSE = Offense.Description)
+# Convert and join arrest codes, calc offense counts 
+RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>%
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>%
+  unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
 
-simplified_ripa_hispanic <- RIPA.Stop.Data.2018 %>% filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Hispanic" | RACE == "White")) %>% select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS))
+RIPA_arrest_join_code <- 
+  RIPA_arrest_codes %>% 
+  inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
 
-simplified_ripa_hispanic_codes <- left_join(simplified_ripa_hispanic, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) %>% select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% rename(OFFENSE = Offense.Description)
+simplified_ripa_black <- RIPA_arrest_join_code %>% 
+  filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White")) %>% 
+  select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%  
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS))
 
-write_csv(simplified_ripa_bhispanic_codes, path="../ripa_sf_hispanic_arrest.csv")
+simplified_ripa_black_codes <- left_join(simplified_ripa_black, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) %>% 
+  select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% 
+  rename(OFFENSE = Offense.Description)
+
+simplified_ripa_hispanic <- RIPA_arrest_join_code %>% 
+  filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Hispanic" | RACE == "White")) %>% 
+  select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%  
+  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS))
+
+simplified_ripa_hispanic_codes <- left_join(simplified_ripa_hispanic, CDS_Codes, by=c("ROS_CUSTODIAL_WOUT_WARRANT_CDS"="CDS.Code")) %>% 
+  select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% 
+  rename(OFFENSE = Offense.Description)
+
+write_csv(simplified_ripa_hispanic_codes, path="../ripa_sf_hispanic_arrest.csv")
+write_csv(simplified_ripa_black_codes, path="../ripa_sf_black_arrest.csv")
 
 
 ```
