@@ -37,11 +37,7 @@ RIPA_stop_counts <- RIPA_r %>%
   group_by(AGENCY_NAME, RACE) %>% 
   summarise(WHITE_STOP_COUNT = sum(RACE == "White"), 
             BLACK_STOP_COUNT = sum(RACE == "Black"),
-            HISPANIC_STOP_COUNT = sum(RACE == "Hispanic"), 
-            ASIAN_STOP_COUNT = sum(RACE == "Asian"), 
-            MULTIRACIAL_STOP_COUNT = sum(RACE == "Multiracial"), 
-            NATIVEAM_STOP_COUNT = sum(RACE == "Native American"),
-            PACISL_STOP_COUNT = sum(RACE == "Pacific Islander")) %>%
+            HISPANIC_STOP_COUNT = sum(RACE == "Hispanic")) %>%
   select(-RACE) %>%
   group_by(AGENCY_NAME) %>% 
   summarise_all(funs(sum))
@@ -62,11 +58,7 @@ RIPA_arrest_offense_counts <-
   summarise(TOTAL = n(), 
             WHITE_ARRESTS_COUNT = sum(RACE == "White"), 
             BLACK_ARRESTS_COUNT = sum(RACE == "Black"), 
-            HISPANIC_ARRESTS_COUNT = sum(RACE == "Hispanic"), 
-            ASIAN_ARRESTS_COUNT = sum(RACE == "Asian"), 
-            MULTIRACIAL_ARRESTS_COUNT = sum(RACE == "Multiracial"), 
-            NATIVEAM_ARRESTS_COUNT = sum(RACE == "Native American"),
-            PACISL_ARRESTS_COUNT = sum(RACE == "Pacific Islander")) %>% 
+            HISPANIC_ARRESTS_COUNT = sum(RACE == "Hispanic")) %>% 
   filter(TOTAL >= 50, Offense.Level != "F") %>% 
   ungroup()
  
@@ -80,29 +72,24 @@ RIPA_total_join <-
   inner_join(RIPA_stop_counts) %>%
   mutate(WHITE_PROP = WHITE_ARRESTS_COUNT / WHITE_STOP_COUNT,
          BLACK_PROP = BLACK_ARRESTS_COUNT / BLACK_STOP_COUNT,
-         HISPANIC_PROP = HISPANIC_ARRESTS_COUNT / HISPANIC_STOP_COUNT,
-         ASIAN_PROP = ASIAN_ARRESTS_COUNT / ASIAN_STOP_COUNT,
-         MULTIRACIAL_PROP = MULTIRACIAL_ARRESTS_COUNT / MULTIRACIAL_STOP_COUNT,
-         NATIVEAM_PROP = NATIVEAM_ARRESTS_COUNT / NATIVEAM_STOP_COUNT,
-         PACISL_PROP = PACISL_ARRESTS_COUNT / PACISL_STOP_COUNT)
+         HISPANIC_PROP = HISPANIC_ARRESTS_COUNT / HISPANIC_STOP_COUNT)
 
 # Keep only prop columns, append mean per row (across each demographic)
 RIPA_props <- RIPA_total_join %>%
-  select(-ends_with("_COUNT"), -matches("TOTAL")) %>%
-  mutate(MEAN = select(., ends_with("_PROP")) %>% 
-           rowMeans(.))
+  select(matches("AGENCY_NAME"), starts_with("OFFENSE.DESCRIPTION"), matches("WHITE_ARRESTS_COUNT"), ends_with("_PROP"))
+  #mutate(MEAN = select(., ends_with("_PROP")) %>% 
+  #        rowMeans(.))
 
 # Calculate "fairness level" using prop per demographic and mean across all demographics
 RIPA_fairness <- RIPA_props %>%
-  mutate(WHITE = WHITE_PROP / MEAN,
-         BLACK = BLACK_PROP / MEAN,
-         HISPANIC = HISPANIC_PROP / MEAN,
-         ASIAN = ASIAN_PROP / MEAN,
-         MULTIRACIAL = MULTIRACIAL_PROP / MEAN,
-         NATIVEAM = NATIVEAM_PROP / MEAN,
-         PACISL = PACISL_PROP / MEAN) %>%
-  select(-ends_with("_PROP"))
+  mutate(BLACK_WHITE_DISPARITY = BLACK_PROP / WHITE_PROP,
+         HISPANIC_WHITE_DISPARITY = HISPANIC_PROP / WHITE_PROP) %>%
+  select(-ends_with("_PROP")) %>%
+  group_by(AGENCY_NAME) %>%
+  mutate(MAX_DISPARITY = pmax(BLACK_WHITE_DISPARITY, HISPANIC_WHITE_DISPARITY)) %>%
+  top_n(n=15, MAX_DISPARITY) %>%
+  ungroup()
 
-write_csv(RIPA_fairness, path="./RIPA_fairness.csv")
+#write_csv(RIPA_fairness, path="./RIPA_fairness.csv")
 ```
 
