@@ -50,7 +50,7 @@ RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] 
 
 RIPA_arrest_join_code <- 
   RIPA_arrest_codes %>% 
-  inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
+  left_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
 
 RIPA_arrest_offense_counts <- 
   RIPA_arrest_join_code %>% 
@@ -90,6 +90,12 @@ RIPA_fairness <- RIPA_props %>%
   top_n(n=15, MAX_DISPARITY) %>%
   ungroup()
 
-#write_csv(RIPA_fairness, path="./RIPA_fairness.csv")
+write_csv(RIPA_fairness, path="./RIPA_fairness.csv")
+```
+```{r message=FALSE, warning=FALSE}
+RIPA_fairness_sfpd <- RIPA_fairness  %>%
+   filter(AGENCY_NAME == "SAN FRANCISCO PD - DOC")
+
+write_csv(RIPA_fairness_sfpd, path="./RIPA_fairness_sfpd.csv")
 ```
 

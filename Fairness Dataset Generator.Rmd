@@ -37,6 +37,14 @@ RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] 
 RIPA_arrest_join_code <- 
   RIPA_arrest_codes %>% 
   inner_join(CDS_Codes, by = c("ROS_CUSTODIAL_WOUT_WARRANT_CDS" = "CDS.Code")) 
+```
+
+```{r message=FALSE, warning=FALSE}
+#uh <-
+#  RIPA_r %>%
+  #select(-matches("ROS_CUSTODIAL_WITHOUT_WARRANT")) %>%
+#  mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>%
+#  full_join(RIPA_arrest_join_code)
 
 simplified_ripa_black <- RIPA_arrest_join_code %>% 
   filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White")) %>% 
@@ -56,8 +64,15 @@ simplified_ripa_hispanic_codes <- left_join(simplified_ripa_hispanic, CDS_Codes,
   select(-c(Offense.Level, ROS_CUSTODIAL_WOUT_WARRANT_CDS)) %>% 
   rename(OFFENSE = Offense.Description)
 
+RIPA_r_black_white <- RIPA_r %>%
+  filter(AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White"))
+
+codes_non_felonies <- CDS_Codes %>%
+  filter(Offense.Level != 'F')
+
 write_csv(simplified_ripa_hispanic_codes, path="../ripa_sf_hispanic_arrest.csv")
 write_csv(simplified_ripa_black_codes, path="../ripa_sf_black_arrest.csv")
-
+write_csv(RIPA_r_black_white, path="../RIPA_r_black_white.csv")
+write_csv(codes_non_felonies, path ="./CDS_Codes_non_felonies.csv")
 
 ```
