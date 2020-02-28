@@ -45,7 +45,7 @@ RIPA_stop_counts <- RIPA_r %>%
 # Convert and join arrest codes, calc offense counts 
 RIPA_arrest_codes <- RIPA_r[!(RIPA_r$ROS_CUSTODIAL_WOUT_WARRANT_CDS == " ") , ] %>%
   mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = strsplit(as.character(ROS_CUSTODIAL_WOUT_WARRANT_CDS), ", ")) %>%
-  unnest(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%
+  unnest_legacy(ROS_CUSTODIAL_WOUT_WARRANT_CDS) %>%
   mutate(ROS_CUSTODIAL_WOUT_WARRANT_CDS = as.numeric(ROS_CUSTODIAL_WOUT_WARRANT_CDS)) 
 
 RIPA_arrest_join_code <- 
