@@ -76,3 +76,31 @@ write_csv(RIPA_r_black_white, path="../RIPA_r_black_white.csv")
 write_csv(codes_non_felonies, path ="./CDS_Codes_non_felonies.csv")
 
 ```
+
+
+
+```{r message=FALSE, warning=FALSE}
+RIPA.Stop.Data.2018$RACE <- 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 1, "Asian",
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 2, "Black", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 3, "Hispanic", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 4, "Asian", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 8, "Multiracial", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 5, "Native American", 
+  ifelse(RIPA.Stop.Data.2018$RAE_FULL == 6, "Pacific Islander", "White")))))))
+
+# Select only relevant cols
+RIPA_r_arrest <- RIPA.Stop.Data.2018 %>% 
+  select(-starts_with('RAE_')) %>% 
+  select(1:13, RACE, everything()) %>%
+  select(AGENCY_NAME, RACE, ROS_CUSTODIAL_WITHOUT_WARRANT)
+
+simplified_ripa_black <- RIPA_r_arrest %>% 
+  filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White"))
+
+simplified_ripa_hispanic <- RIPA_r_arrest %>% 
+  filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Hispanic" | RACE == "White"))
+
+write_csv(simplified_ripa_hispanic, path="../ripa_sf_hispanic_arrest.csv")
+write_csv(simplified_ripa_black, path="../ripa_sf_black_arrest.csv")
+```
