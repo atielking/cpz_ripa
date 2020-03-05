@@ -12,24 +12,24 @@ from scipy import stats
 
 def clean_data(filename):
     df = pd.read_csv(filename)
-    overall_black = df[df['RACE'].str.contains("Black")==True]
+    overall_hispanic = df[df['RACE'].str.contains("Hispanic")==True]
     overall_white = df[df['RACE'].str.contains("White")==True]
 
     #print(overall_black, overall_white)
 
-    black_df = overall_black['ROS_CUSTODIAL_WITHOUT_WARRANT']
-    black_arr = np.array(black_df)
+    hispanic_df = overall_hispanic['ROS_CUSTODIAL_WITHOUT_WARRANT']
+    hispanic_arr = np.array(hispanic_df)
     white_df = overall_white['ROS_CUSTODIAL_WITHOUT_WARRANT']
     white_arr = np.array(white_df)
 
-    return (black_arr, white_arr)
+    return (hispanic_arr, white_arr)
 
 def calc_cohen_d(group1, group2):
     """
     Calculate and Define Cohen's d.
-    Cohen’s d effect size measures the difference between the means of both groups.
+    Cohen's d effect size measures the difference between the means of both groups.
     This gives some insight into how much change is actually occurring between the two groups.
-    The outcome of the Cohen’s d effect size is measured in standard deviations.
+    The outcome of the Cohen's d effect size is measured in standard deviations.
 
     0.0-0.20 = small effect
     0.20-0.50 = medium effect
@@ -68,22 +68,22 @@ def calc_min_sample_size(group1, group2, cohens_d):
     #print("Number of white stopped:", len(group2))
     return int(result)
 
-def perform_two_sample_t_test(black_arr, white_arr):
-    cohens_d = calc_cohen_d(black_arr, white_arr)
-    sample_size = calc_min_sample_size(black_arr, white_arr, cohens_d)
+def perform_two_sample_t_test(group1, group2):
+    cohens_d = calc_cohen_d(group1, group2)
+    sample_size = calc_min_sample_size(group1, group2, cohens_d)
 
     # Bootstrapping methodology
-    sample_means_overall_black = []
+    sample_means_overall_group1 = []
     for _ in range(100):
-        sample_mean = np.random.choice(black_arr,size=sample_size).mean()
-        sample_means_overall_black.append(sample_mean)
+        sample_mean = np.random.choice(group1,size=sample_size).mean()
+        sample_means_overall_group1.append(sample_mean)
 
-    sample_means_overall_white = []
+    sample_means_overall_group2 = []
     for _ in range(100):
-        sample_mean = np.random.choice(white_arr,size=sample_size).mean()
-        sample_means_overall_white.append(sample_mean)
+        sample_mean = np.random.choice(group2,size=sample_size).mean()
+        sample_means_overall_group2.append(sample_mean)
 
-    t_stat = stats.ttest_ind(sample_means_overall_black, sample_means_overall_white)
+    t_stat = stats.ttest_ind(sample_means_overall_group1, sample_means_overall_group2)
     print(t_stat)
 
     # Analyze results
@@ -122,8 +122,8 @@ def main():
     reject our Null hypothesis.
     '''
     print(intro)
-    black_arr, white_arr = clean_data('../ripa_sf_black_arrest.csv')
-    perform_two_sample_t_test(black_arr, white_arr)
+    hispanic_arr, white_arr = clean_data('../arrest_sig/ripa_sf_hispanic_arrest.csv')
+    perform_two_sample_t_test(hispanic_arr, white_arr)
 
 if __name__== "__main__":
     main()
