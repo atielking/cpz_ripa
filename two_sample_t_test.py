@@ -8,6 +8,7 @@ from scipy import stats
 # References:
 # https://towardsdatascience.com/master-your-hypothesis-test-a-tutorial-on-power-bootstrapping-sample-selection-and-outcome-273d6739d3e5
 # https://www.statisticshowto.datasciencecentral.com/cohens-d/
+# https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/NCSS/Two-Sample_T-Test.pdf
 
 def clean_data(filename):
     df = pd.read_csv(filename)
