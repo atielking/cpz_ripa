@@ -73,12 +73,12 @@ def perform_two_sample_t_test(black_arr, white_arr):
 
     # Bootstrapping methodology
     sample_means_overall_black = []
-    for _ in range(1000):
+    for _ in range(100):
         sample_mean = np.random.choice(black_arr,size=sample_size).mean()
         sample_means_overall_black.append(sample_mean)
 
     sample_means_overall_white = []
-    for _ in range(1000):
+    for _ in range(100):
         sample_mean = np.random.choice(white_arr,size=sample_size).mean()
         sample_means_overall_white.append(sample_mean)
 
