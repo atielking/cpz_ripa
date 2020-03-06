@@ -12,17 +12,17 @@ from scipy import stats
 
 def clean_data(filename):
     df = pd.read_csv(filename)
-    overall_black = df[df['RACE'].str.contains("Black")==True]
+    overall_hispanic = df[df['RACE'].str.contains("Hispanic")==True]
     overall_white = df[df['RACE'].str.contains("White")==True]
 
     #print(overall_black, overall_white)
 
-    black_df = overall_black['use_of_force']
-    black_arr = np.array(black_df)
+    hispanic_df = overall_hispanic['use_of_force']
+    hispanic_arr = np.array(hispanic_df)
     white_df = overall_white['use_of_force']
     white_arr = np.array(white_df)
 
-    return (black_arr, white_arr)
+    return (hispanic_arr, white_arr)
 
 def calc_cohen_d(group1, group2):
     """
@@ -122,8 +122,8 @@ def main():
     reject our Null hypothesis.
     '''
     print(intro)
-    black_arr, white_arr = clean_data('../force_sig/ripa_sf_black_force.csv')
-    perform_two_sample_t_test(black_arr, white_arr)
+    hispanic_arr, white_arr = clean_data('../force_sig/ripa_sf_hispanic_force_arrest.csv')
+    perform_two_sample_t_test(hispanic_arr, white_arr)
 
 if __name__== "__main__":
     main()

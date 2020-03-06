@@ -95,14 +95,14 @@ RIPA_r_force <- RIPA.Stop.Data.2018 %>%
   select(-starts_with('RAE_')) %>% 
   select(1:13, RACE, everything()) %>%
   mutate(use_of_force = ifelse(ADS_FIREARM_POINT == 1 | ADS_FIREARM_DISCHARGE == 1 | ADS_BATON == 1 | ADS_CHEM_SPRAY == 1 | ADS_IMPACT_DISCHARGE == 1 | ADS_CANINE_BITE == 1 | ADS_ELECT_DEVICE == 1 | ADS_OTHER_CONTACT == 1, 1, 0)) %>% mutate(use_of_force = ifelse(is.na(use_of_force), 0, use_of_force)) %>%
-  select(AGENCY_NAME, RACE, use_of_force)
+  select(AGENCY_NAME, RACE, use_of_force, ROS_CUSTODIAL_WITHOUT_WARRANT)
 
 simplified_ripa_black <- RIPA_r_force %>% 
-  filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Black" | RACE == "White"))
+  filter (AGENCY_NAME == "LOS ANGELES CO SD" & ROS_CUSTODIAL_WITHOUT_WARRANT == 1 & (RACE == "Black" | RACE == "White"))
 
 simplified_ripa_hispanic <- RIPA_r_force %>% 
-  filter (AGENCY_NAME == "SAN FRANCISCO PD - DOC" & (RACE == "Hispanic" | RACE == "White"))
+  filter (AGENCY_NAME == "LOS ANGELES CO SD" & ROS_CUSTODIAL_WITHOUT_WARRANT == 1 & (RACE == "Hispanic" | RACE == "White"))
 
-write_csv(simplified_ripa_hispanic, path="../force_sig/ripa_sf_hispanic_force.csv")
-write_csv(simplified_ripa_black, path="../force_sig/ripa_sf_black_force.csv")
+write_csv(simplified_ripa_hispanic, path="../force_sig/ripa_laco_hispanic_force_arrest.csv")
+write_csv(simplified_ripa_black, path="../force_sig/ripa_laco_black_force_arrest.csv")
 ```
